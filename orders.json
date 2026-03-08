@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ORD-001",
+    "product": "Laptop",
+    "price": 50000
+  },
+  {
+    "id": "ORD-002",
+    "product": "Mouse",
+    "price": 500
+  },
+  {
+    "id": "ORD-003",
+    "product": "Monitor",
+    "price": 25000
+  },
+  {
+    "id": "ORD-004",
+    "product": "Keyboard",
+    "price": 1500
+  }
+]

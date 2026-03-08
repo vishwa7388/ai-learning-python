@@ -1,0 +1,25 @@
+{
+  "name": "Vishawanath Singh",
+  "age": 34,
+  "role": "Senior Software Engineer",
+  "salary": 1900000,
+  "skills": [
+    "Java",
+    "Spring Boot",
+    "Python",
+    "LangChain",
+    "RAG"
+  ],
+  "projects": [
+    {
+      "name": "DP API",
+      "tech": "Spring Boot",
+      "company": "Express Scripts"
+    },
+    {
+      "name": "AI Architecture Analyzer",
+      "tech": "Python + Ollama",
+      "company": "Personal"
+    }
+  ]
+}

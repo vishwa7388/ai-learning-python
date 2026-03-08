@@ -1,0 +1,5 @@
+Name: Vishawanath Singh
+Age: 34
+Role: Senior Software Engineer
+Skills: Java, Spring Boot, Python, AI
+Goal: AI Engineer in 2 months!

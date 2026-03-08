@@ -1,0 +1,10 @@
+orders = [
+    {"id": "ORD-001", "product": "Laptop", "price": 50000},
+    {"id": "ORD-002", "product": "Mouse", "price": 500},
+    {"id": "ORD-003", "product": "Monitor", "price": 25000},
+    {"id": "ORD-004", "product": "Keyboard", "price": 1500}
+]
+count = 0
+for order in orders:
+    count += 1
+    print(f"Order number {count} is {order['id']}: {order['product']} - Rs.{order['price']}")

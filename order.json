@@ -1,0 +1,15 @@
+{
+  "id": "ORD-001",
+  "product": "Laptop",
+  "quantity": 2,
+  "price": 50000,
+  "customer": {
+    "name": "Vicky",
+    "city": "Khatima"
+  },
+  "items": [
+    "Laptop",
+    "Charger",
+    "Bag"
+  ]
+}
