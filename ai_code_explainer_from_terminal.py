@@ -49,3 +49,4 @@ while True:
     answer = ask_ai(prompt)
     print(f"AI: {answer}\n")
     print("-" * 50)
+    print("hello")
