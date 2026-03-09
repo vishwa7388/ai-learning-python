@@ -1,0 +1,101 @@
+<html><body>
+<h1>Dispensing Pharmacies API - Documentation</h1>
+<p><strong>Files Analyzed:</strong> 2</p>
+<hr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispensing Pharmacies API Documentation</title>
+</head>
+<body>
+    <h2>Overview</h2>
+    <p>This API routes prescription orders to the nearest pharmacy based on patient demographics and drug availability.</p>
+
+    <h2>Entry Point</h2>
+    <p><code>SearchController</code>, <code>/dispensingPharmacies/search</code>, <code>POST</code></p>
+
+    <h2>Request</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>NDC</td>
+                <td>String</td>
+                <td>National Drug Code of the drug</td>
+            </tr>
+            <tr>
+                <td>Patient ID</td>
+                <td>String</td>
+                <td>Unique identifier for the patient</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Processing Flow</h2>
+    <ol>
+        <li>Receive search request</li>
+        <li>Fetch drug information using <code>DrugAdaptor</code></li>
+        <li>Retrieve member information using <code>MembershipAdaptor</code></li>
+        <li>Get pharmacy routing using <code>RxRoutingAdaptor</code></li>
+        <li>Apply business rules (GAC, QOH, DoD Override)</li>
+        <li>Return optimal pharmacy and alternative pharmacies</li>
+    </ol>
+
+    <h2>External API Calls</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>API Name</th>
+                <th>Purpose</th>
+                <th>Called From</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Drug API</td>
+                <td>Fetch drug information</td>
+                <td><code>DrugAdaptor</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Business Rules</h2>
+    <ul>
+        <li><strong>GAC Rule</strong>: Ensures that the pharmacy is capable of handling the drug.</li>
+        <li><strong>QOH Rule</strong>: Verifies that the pharmacy has sufficient quantity on hand.</li>
+        <li><strong>DoD Override</strong>: Overrides default rules based on doctor's order.</li>
+    </ul>
+
+    <h2>Response</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Optimal Pharmacy</td>
+                <td>Pharmacy</td>
+                <td>The pharmacy that can fulfill the prescription</td>
+            </tr>
+            <tr>
+                <td>Alternative Pharmacies</td>
+                <td>List of Pharmacies</td>
+                <td>Other pharmacies that can fulfill the prescription</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+</body></html>
