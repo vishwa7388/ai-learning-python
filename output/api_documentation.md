@@ -1,6 +1,3 @@
-<html>
-<body>
-<pre>
 ```markdown
 # Dispensing Pharmacies API Documentation
 
@@ -40,6 +37,3 @@ This API routes pharmacy orders based on drug information and member details.
   - `optimalPharmacy` (Pharmacy): The optimal pharmacy to dispense the drug
   - `alternativePharmacies` (List<Pharmacy>): A list of alternative pharmacies
 ```
-</pre>
-</body>
-</html>

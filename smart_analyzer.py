@@ -2,8 +2,13 @@ import requests
 import os
 
 def read_java_file(file_path):
-    with open(file_path, "r") as f:
-        return f.read()
+    try:
+        # 'with' ensures file automatically close (like try-with-resources)
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"ERROR: File not found - {file_path}")
+        return None
 
 def scan_folder(folder_path):
     java_files = []
@@ -13,17 +18,18 @@ def scan_folder(folder_path):
     return java_files
 
 def analyze_full_flow(all_code):
+    # Prompt updated to stop AI from chatting and only output Markdown
     prompt = f"""ROLE: You are a Senior Spring Boot architect who writes Confluence documentation.
 
 CONTEXT: These files are part of Dispensing Pharmacies API - 
 a pharmacy routing microservice.
 
-TASK: Generate complete API documentation.
+TASK: Generate complete API documentation in Markdown format.
 
 FORMAT:
-Generate output in clean HTML format.
-Use <h2> for sections, <table> for tables, <ol> for steps.
-Do NOT use Markdown. Use only HTML tags.
+Output ONLY raw Markdown code.
+Do NOT include any introductory phrases like "Here is the documentation" or conversational text.
+Start directly with the # headers.
 
 Sections:
 1. Overview (What does this API do - 2 lines max)
@@ -40,15 +46,48 @@ Do NOT repeat any point. Keep it concise.
 CODE:
 {all_code}"""
 
-    response = requests.post("http://localhost:11434/api/generate", json={
-        "model": "qwen2.5-coder:7b",
-        "prompt": prompt,
-        "stream": False
-    })
+    try:
+        response = requests.post("http://localhost:11434/api/generate", json={
+            "model": "qwen2.5-coder:7b",
+            "prompt": prompt,
+            "stream": False
+        })
+        return response.json()["response"]
+    except requests.exceptions.ConnectionError:
+        print("ERROR: Ollama not running! Start with: ollama serve")
+        return None
 
-    return response.json()["response"]
+def save_multiple_formats(content, base_name):
+    """Saves the AI output into both .md and .html files"""
+    # 1. Create Output folder (Java: new File("output").mkdirs())
+    os.makedirs("output", exist_ok=True)
+    
+    md_file = f"output/{base_name}.md"
+    html_file = f"output/{base_name}.html"
 
-# --- MAIN ---
+    # 2. Markdown save 
+    try:
+        with open(md_file, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"Markdown saved successfully: {md_file}")
+    except Exception as e:
+        print(f"Error saving Markdown: {e}")
+
+    # 3. HTML save (Basic wrapper)
+    try:
+        with open(html_file, "w", encoding="utf-8") as f:
+            html_wrapper = f"<html>\n<body>\n<pre>\n{content}\n</pre>\n</body>\n</html>"
+            f.write(html_wrapper)
+        print(f"HTML saved successfully: {html_file}")
+    except Exception as e:
+        print(f"Error saving HTML: {e}")
+
+
+# ==========================================
+# MAIN EXECUTION BLOCK
+# ==========================================
+# In Java  public static void main(String[] args) 
+
 folder = "sample_code"
 files = scan_folder(folder)
 print(f"Found {len(files)} Java files\n")
@@ -57,22 +96,19 @@ all_code = ""
 for file_path in files:
     filename = os.path.basename(file_path)
     code = read_java_file(file_path)
+    if code is None:
+        continue
     all_code += f"\n// FILE: {filename}\n{code}\n"
 
-print("Analyzing full flow...\n")
-result = analyze_full_flow(all_code)
-print(result)
+if all_code.strip() == "":
+    print("No Java code found to analyze!")
+else:
+    print("Analyzing full flow with qwen2.5-coder...\n")
+    result = analyze_full_flow(all_code)
 
-# --- SAVE TO HTML ---
-output_file = "output/api_documentation.html"
-os.makedirs("output", exist_ok=True)
-
-with open(output_file, "w") as f:
-    f.write("<html><body>\n")
-    f.write("<h1>Dispensing Pharmacies API - Documentation</h1>\n")
-    f.write(f"<p><strong>Files Analyzed:</strong> {len(files)}</p>\n")
-    f.write("<hr>\n")
-    f.write(result)
-    f.write("\n</body></html>")
-
-print(f"\nSaved to: {output_file}")
+    if result is None:
+        print("Analysis failed!")
+    else:
+        # Pass the result to our new multi-format saver
+        save_multiple_formats(result, "api_documentation")
+        print("\nCompleted successfully!")
