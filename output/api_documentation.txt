@@ -1,0 +1,38 @@
+Dispensing Pharmacies API - Documentation
+Files Analyzed: 2
+==================================================
+
+1. **Overview**:  
+   This API routes prescription drugs to the nearest available pharmacy based on patient membership and drug availability.
+
+2. **Entry Point**:  
+   - Controller: `SearchController`
+   - Endpoint: `/dispensingPharmacies/search`
+   - HTTP Method: `POST`
+
+3. **Request**:  
+   - `SearchRequest`
+     - `ndc`: String - National Drug Code
+     - `patientId`: String - Patient identifier
+
+4. **Processing Flow**:  
+   1. Receive `SearchRequest` with `ndc` and `patientId`.
+   2. Fetch `DrugInfo` using `DrugAdaptor`.
+   3. Retrieve `MemberInfo` using `MembershipAdaptor`.
+   4. Get a list of pharmacies that can route the drug using `RxRoutingAdaptor`.
+   5. Apply business rules to filter and select the optimal pharmacy.
+
+5. **External API Calls**:  
+   | API Name       | Purpose                  | Called From                |
+   |----------------|--------------------------|----------------------------|
+   | drug-api       | Fetch drug information   | `DrugAdaptor.getDrugInfo`  |
+
+6. **Business Rules**:  
+   - GAC Rule: Apply Group Average Cost rules to ensure the pharmacy offers the best price.
+   - QOH Rule: Ensure the pharmacy has sufficient quantity on hand.
+   - DoD Override: Override default drug distribution based on special conditions.
+
+7. **Response**:  
+   - `SearchResponse`
+     - `optimalPharmacy`: Pharmacy - The nearest pharmacy that can route the drug.
+     - `alternativePharmacies`: List<Pharmacy> - Additional pharmacies that can route the drug.

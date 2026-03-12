@@ -1,0 +1,150 @@
+<html><head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 40px; background-color: #f9f9f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .mermaid { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    </style>
+    </head><body><h1>KodeLens Project Report</h1><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP API Documentation</title>
+    <style>
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>DP API Documentation</h1>
+    <h2>DrugAdaptor</h2>
+    <h3>getDrugInfo(String ndc)</h3>
+    <p>Returns the drug information based on the NDC number.</p>
+    <h4>Parameters</h4>
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>ndc</td>
+            <td>String</td>
+            <td>The NDC number of the drug.</td>
+        </tr>
+    </table>
+    <h4>Returns</h4>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>DrugInfo</td>
+            <td>The drug information.</td>
+        </tr>
+    </table>
+    <h2>SearchController</h2>
+    <h3>search(SearchRequest request)</h3>
+    <p>Searches for the optimal pharmacy based on the search request.</p>
+    <h4>Parameters</h4>
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>request</td>
+            <td>SearchRequest</td>
+            <td>The search request containing the NDC and patient ID.</td>
+        </tr>
+    </table>
+    <h4>Returns</h4>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>SearchResponse</td>
+            <td>The response containing the optimal pharmacy and other pharmacies.</td>
+        </tr>
+    </table>
+    <h2>SearchService</h2>
+    <h3>findOptimalPharmacy(SearchRequest request)</h3>
+    <p>Finds the optimal pharmacy based on the search request.</p>
+    <h4>Parameters</h4>
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>request</td>
+            <td>SearchRequest</td>
+            <td>The search request containing the NDC and patient ID.</td>
+        </tr>
+    </table>
+    <h4>Returns</h4>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>SearchResponse</td>
+            <td>The response containing the optimal pharmacy and other pharmacies.</td>
+        </tr>
+    </table>
+    <h3>applyBusinessRules(List<Pharmacy> pharmacies, MemberInfo member)</h3>
+    <p>Applies business rules to the list of pharmacies and member information.</p>
+    <h4>Parameters</h4>
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>pharmacies</td>
+            <td>List&lt;Pharmacy&gt;</td>
+            <td>The list of pharmacies.</td>
+        </tr>
+        <tr>
+            <td>member</td>
+            <td>MemberInfo</td>
+            <td>The member information.</td>
+        </tr>
+    </table>
+    <h4>Returns</h4>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>SearchResponse</td>
+            <td>The response containing the optimal pharmacy and other pharmacies.</td>
+        </tr>
+    </table>
+</body>
+</html></body></html>
