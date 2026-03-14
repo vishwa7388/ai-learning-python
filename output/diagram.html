@@ -1,54 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-    
+<!DOCTYPE html><html><head>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #172b4d; max-width: 1000px; margin: 0 auto; padding: 40px; background-color: #f4f5f7; }
-        h1 { color: #0052cc; border-bottom: 2px solid #0052cc; padding-bottom: 10px; text-align: center; }
-        .mermaid { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; overflow-x: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f5f7; padding: 40px; }
+        .mermaid { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: block; white-space: pre; }
+        h1 { color: #0052cc; text-align: center; }
     </style>
-    
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-</head>
-<body>
-    <h1>KodeLens - Auto Updated Flow Diagram</h1>
-    <div class="mermaid">
-sequenceDiagram
-participant Client
-participant Controller
-participant Service
-participant Rule1
-participant Rule2
-participant Rule3
-rect rgb(230, 245, 255)
-Client->>Controller: POST /search
-Controller->>Service: process(SearchRequest request)
+    <script src="[https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)"></script></head>
+    <body><h1>KodeLens - Professional Flow</h1><div class="mermaid">sequenceDiagram
+autonumber
+box rgba(255, 204, 229, 0.5) "External
+participant User
+participant SearchController
 end
-rect rgb(229, 204, 229)
-Service->>Rule1: applyRule(request)
-Rule1-->>Service: return "Geographic Access Criteria Passed"
-Service->>Rule2: applyRule(request)
-Rule2-->>Service: return "Quantity On Hand Checked"
-Service->>Rule3: applyRule(request)
-Rule3-->>Service: return "Department of Defense Override Applied"
+box rgba(230, 245, 255, 0.5) "API Layer
+SearchController->>SearchService: findOptimalPharmacy(SearchRequest req)
 end
-Service->>Client: ResponseEntity.ok("Pharmacy_CVS_12345")
-    </div>
-    <script>
-        const config = JSON.parse(`{
-            "startOnLoad": true, 
-            "securityLevel": "loose", 
-            "theme": "base",
-            "themeVariables": {
-                "primaryColor": "#e9f2fa",
-                "primaryTextColor": "#172b4d",
-                "primaryBorderColor": "#0052cc",
-                "lineColor": "#6b778c",
-                "secondaryColor": "#fffae6",
-                "tertiaryColor": "#e3fcef"
-            }
-        }`);
-        mermaid.initialize(config);
-    </script>
-</body>
-</html>
+box rgba(200, 255, 200, 0.5) "Business Logic
+SearchService->>DoDOverrideRule: applyRule(SearchRequest req)
+alt Benefit Type is RETAIL
+DoDOverrideRule-->>SearchService: return "Department of Defense Override Applied for Retail
+else Benefit Type is MAIL
+DoDOverrideRule-->>SearchService: return "Rule Skipped - Mail Benefit Not Eligible for DoD
+end
+SearchService->>GACRule: applyRule(SearchRequest req)
+SearchService->>QOHRule: applyRule(SearchRequest req)
+SearchService->>GetAllowedServiceBranchRule: applyRule(SearchRequest req)
+end
+SearchService-->>User: return optimalPharmacy</div>
+    <script>mermaid.initialize({startOnLoad:true, theme:'base', themeVariables:{primaryColor:'#e9f2fa', lineColor:'#6b778c'}});</script>
+    </body></html>

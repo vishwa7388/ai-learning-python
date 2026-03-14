@@ -9,9 +9,3 @@ public class GACRule {
 public class QOHRule {
     public String applyRule(SearchRequest req) { return "Quantity On Hand Checked"; }
 }
-
-// DoDOverrideRule.java
-@Component
-public class DoDOverrideRule {
-    public String applyRule(SearchRequest req) { return "Department of Defense Override Applied"; }
-}
