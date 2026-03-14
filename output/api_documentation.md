@@ -1,39 +1,20 @@
-```markdown
-# Dispensing Pharmacies API Documentation
+# DP API Documentation
 
-## Overview
-This API routes pharmacy orders based on drug information and member details.
+## Core Components
+- **Controllers**: `SearchController`
+- **Services**: `SearchService`
+- **Rules**: `GACRule`, `QOHRule`, `DoDOverrideRule`
 
-## Entry Point
-- **Controller**: `SearchController`
-- **Endpoint**: `/dispensingPharmacies/search`
-- **HTTP Method**: `POST`
+## Business Rules Applied
+1. **Geographic Access Criteria (GAC)**: Ensures that the pharmacy is within an acceptable geographic distance.
+2. **Quantity On Hand (QOH)**: Checks if the requested medication is in stock at the pharmacy.
+3. **Department of Defense Override**: Allows access if the request is coming from a military department.
 
-## Request
-- **Request Body**: `SearchRequest`
-  - `ndc` (String): National Drug Code
-  - `patientId` (String): Member's unique identifier
-
-## Processing Flow
-1. Receive `SearchRequest`
-2. Call `DrugAdaptor.getDrugInfo(ndc)` to retrieve drug information
-3. Call `MembershipAdaptor.getMemberInfo(patientId)` to retrieve member details
-4. Call `RxRoutingAdaptor.getRouting(drug, member)` to get a list of pharmacies
-5. Apply business rules (GAC Rule, QOH Rule, DoD Override)
-6. Return `SearchResponse` with optimal pharmacy and list of alternatives
-
-## External API Calls
-| API Name | Purpose | Called From |
-|----------|---------|-------------|
-| Drug API | Retrieves drug information | `DrugAdaptor.getDrugInfo(ndc)` |
-
-## Business Rules
-1. **GAC Rule**: Ensures the pharmacy is authorized to dispense the drug to the member.
-2. **QOH Rule**: Validates that the pharmacy has the required quantity on hand.
-3. **DoD Override**: Allows the pharmacy to override the default rules under certain conditions.
-
-## Response
-- **Response Body**: `SearchResponse`
-  - `optimalPharmacy` (Pharmacy): The optimal pharmacy to dispense the drug
-  - `alternativePharmacies` (List<Pharmacy>): A list of alternative pharmacies
-```
+## Flow Summary
+1. A `POST` request is made to `/dispensingPharmacies/search` with a `SearchRequest` body.
+2. The `SearchController` receives the request and delegates it to the `SearchService`.
+3. The `SearchService` applies the following rules in sequence:
+   - `GACRule`: Validates if the pharmacy meets the geographic criteria.
+   - `QOHRule`: Checks if the requested medication is in stock.
+   - `DoDOverrideRule`: Overrides the rules if the request is from a military department.
+4. If all rules pass, the service returns the optimal pharmacy (`Pharmacy_CVS_12345` in this mock response).

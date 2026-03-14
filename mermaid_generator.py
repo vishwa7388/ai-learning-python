@@ -1,5 +1,7 @@
 import requests
 import os
+import re
+import json
 
 def read_java_file(file_path):
     try:
@@ -19,19 +21,22 @@ def scan_folder(folder_path):
     return java_files
 
 def analyze_with_ai(all_code, output_format):
-    # 🚨 GURU MANTRA: Example-Based Prompting (Few-Shot)
+    # 🚨 GURU MANTRA: Force JSON Array format to guarantee separate lines
     if output_format == "mermaid":
-        instr = """Generate ONLY a visual Mermaid.js sequenceDiagram. 
-        DO NOT generate tables. DO NOT use markdown backticks. 
-        CRITICAL RULE: You MUST use a newline (\n) after EVERY statement. Do NOT write it all on one line.
+        instr = """CRITICAL: You MUST output ONLY a valid JSON array of strings. 
+        DO NOT output raw mermaid text. DO NOT use markdown code blocks.
+        The JSON array must contain the Mermaid.js sequence diagram line by line.
+        First element MUST be "sequenceDiagram".
+        Do NOT use '<' or '>' in method returns (write 'List of Pharmacy').
         
         EXAMPLE FORMAT:
-        sequenceDiagram
-            participant Client
-            participant Controller
-            participant Service
-            Client->>Controller: POST /search
-            Controller->>Service: process()
+        [
+            "sequenceDiagram",
+            "participant Client",
+            "participant Controller",
+            "Client->>Controller: POST /search",
+            "Controller->>Service: process()"
+        ]
         """
     elif output_format == "html":
         instr = """Generate professional documentation in HTML. 
@@ -63,19 +68,33 @@ CODE:
 def save_output(result, fmt):
     os.makedirs("output", exist_ok=True)
     
-    # Safai: Remove Markdown Backticks
-    clean_res = result.replace("```mermaid", "").replace("```html", "").replace("```", "").strip()
+    clean_res = result
     
-    # 🚨 Python Fallback: Agar AI ne galti se fir ek line me likh diya (Fixing spacing)
     if fmt == "mermaid":
-        clean_res = clean_res.replace(" participant ", "\n    participant ")
-        clean_res = clean_res.replace(" Client->", "\n    Client->")
-        clean_res = clean_res.replace(" Controller->", "\n    Controller->")
-        clean_res = clean_res.replace(" Service->", "\n    Service->")
-        clean_res = clean_res.replace(" Adaptor->", "\n    Adaptor->")
-        clean_res = clean_res.replace(" ExternalAPI->", "\n    ExternalAPI->")
-        clean_res = clean_res.replace("->>", "->>") # Normalize arrows
-        clean_res = clean_res.replace("-->>", "-->>")
+        # 🚨 PYTHON JSON PARSER: Extracting the array to build perfect newlines
+        try:
+            start = result.find('[')
+            end = result.rfind(']') + 1
+            if start != -1 and end > start:
+                json_str = result[start:end]
+                diagram_lines = json.loads(json_str)
+                # Join the array elements with perfect newlines
+                clean_res = "\n".join(diagram_lines)
+            else:
+                raise ValueError("No JSON Array brackets found in AI output")
+        except Exception as e:
+            print(f"⚠️ JSON Parse Fallback triggered: {e}")
+            # Absolute worst-case fallback
+            clean_res = result.replace("```json", "").replace("```mermaid", "").replace("```", "").strip()
+            clean_res = clean_res.replace(" participant ", "\nparticipant ")
+            clean_res = re.sub(r'\s+([A-Za-z0-9_]+->>)', r'\n\1', clean_res)
+            clean_res = re.sub(r'\s+([A-Za-z0-9_]+-->>)', r'\n\1', clean_res)
+            
+        clean_res = clean_res.replace("sequenceDiagram", "sequenceDiagram\n")
+        clean_res = "\n".join([line.strip() for line in clean_res.split("\n") if line.strip()])
+    else:
+        # HTML/Markdown cleanup
+        clean_res = result.replace("```html", "").replace("```markdown", "").replace("```", "").strip()
 
     # Beautiful Confluence CSS
     common_style = """
@@ -100,7 +119,7 @@ def save_output(result, fmt):
 <html>
 <head>
     {common_style}
-    <script src="[https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
     <h1>KodeLens - Confluence Flow Diagram</h1>
