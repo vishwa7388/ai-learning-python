@@ -1,36 +1,30 @@
-@RestController
-@RequestMapping("/dispensingPharmacies")
-public class SearchController {
+package com.cigna.dp.service;
 
-    @Autowired
-    private SearchService searchService;
-
-    @PostMapping("/search")
-    public ResponseEntity<SearchResponse> search(
-            @RequestBody SearchRequest request) {
-        return ResponseEntity.ok(searchService.findOptimalPharmacy(request));
-    }
-}
+import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class SearchService {
 
-    @Autowired
-    private DrugAdaptor drugAdaptor;
-    @Autowired
-    private MembershipAdaptor membershipAdaptor;
-    @Autowired
-    private RxRoutingAdaptor rxRoutingAdaptor;
+    // Injecting 3 active rules
+    private final GACRule gacRule;
+    private final QOHRule qohRule;
+    private final DoDOverrideRule dodOverrideRule;
 
-    public SearchResponse findOptimalPharmacy(SearchRequest request) {
-        DrugInfo drug = drugAdaptor.getDrugInfo(request.getNdc());
-        MemberInfo member = membershipAdaptor.getMemberInfo(request.getPatientId());
-        List<Pharmacy> pharmacies = rxRoutingAdaptor.getRouting(drug, member);
-        return applyBusinessRules(pharmacies, member);
+    public SearchService(GACRule gacRule, QOHRule qohRule, DoDOverrideRule dodOverrideRule) {
+        this.gacRule = gacRule;
+        this.qohRule = qohRule;
+        this.dodOverrideRule = dodOverrideRule;
     }
 
-    private SearchResponse applyBusinessRules(List<Pharmacy> pharmacies, MemberInfo member) {
-        // Apply GAC Rule, QOH Rule, DoD Override
-        return new SearchResponse(pharmacies.get(0), pharmacies.subList(1, pharmacies.size()));
+    public String findOptimalPharmacy(SearchRequest request) {
+        System.out.println("Fetching pharmacies from RxRouting Adaptor...");
+        
+        // Applying Business Rules
+        System.out.println("Applying Rule 1: " + gacRule.applyRule(request));
+        System.out.println("Applying Rule 2: " + qohRule.applyRule(request));
+        System.out.println("Applying Rule 3: " + dodOverrideRule.applyRule(request));
+        
+        return "Pharmacy_CVS_12345"; // Mock response
     }
 }
