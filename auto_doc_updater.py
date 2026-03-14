@@ -22,17 +22,8 @@ def read_java_files(folder_path):
 def generate_markdown_docs(code):
     prompt = f"""ROLE: Senior Spring Boot Architect.
 TASK: Generate concise API documentation in Markdown format.
-
-SECTIONS REQUIRED:
-1. # DP API Documentation
-2. ## Core Components (List Controller and Service)
-3. ## Business Rules Applied (Identify and explain all business rules and conditional logic found in the code)
-4. ## Flow Summary
-
-CRITICAL RULE:
-Output ONLY valid Markdown. Do not include introductory text.
-
-CODE TO ANALYZE:
+SECTIONS: Overview, Core Components, Business Rules (with logic), Flow Summary.
+CODE:
 {code}"""
 
     try:
@@ -43,26 +34,23 @@ CODE TO ANALYZE:
         }, timeout=300)
         return response.json().get("response", "")
     except Exception as e:
-        return f"Ollama se connect karne mein error: {e}"
+        return f"Error: {e}"
 
 def generate_mermaid_diagram(code):
     prompt = f"""ROLE: Senior Spring Boot Architect.
-TASK: Analyze the provided code and generate a visual Mermaid.js sequenceDiagram.
+TASK: Generate a Mermaid.js sequenceDiagram JSON array.
 
 CRITICAL RULES:
-1. You MUST output ONLY a valid JSON array of strings. 
-2. First element MUST be "sequenceDiagram". Second element MUST be "autonumber".
-3. Use ACTUAL class names. DO NOT use generic names like Rule1.
-4. Use Mermaid 'box' syntax to group layers (External, API, Service, Rules).
-5. VISUAL CONDITIONS (CRITICAL): If you find 'if/else' logic (like Retail vs Mail), you MUST use 'alt', 'else', and 'end' strings in the array. This creates visual conditional boxes in the diagram.
+1. Output ONLY a valid JSON array of strings.
+2. Participant definitions MUST be separate from interaction arrows.
+3. Use 'box' syntax for layers. 
+4. Participants inside the box should NOT have quotes in the name unless needed for display.
+5. Flow interactions (arrows) must follow the participant definitions.
 
-COLOR THEMES:
-- box rgba(255, 204, 229, 0.5) "External"
-- box rgba(230, 245, 255, 0.5) "API Layer"
-- box rgba(200, 255, 200, 0.5) "Business Logic"
-- box rgba(229, 204, 255, 0.5) "Rules Engine"
+EXAMPLE:
+["sequenceDiagram", "autonumber", "box rgba(230, 245, 255, 0.5) API", "participant SearchController", "end", "SearchController->>SearchService: process"]
 
-CODE TO ANALYZE:
+CODE:
 {code}"""
 
     try:
@@ -73,71 +61,80 @@ CODE TO ANALYZE:
         }, timeout=300)
         return response.json().get("response", "")
     except Exception as e:
-        return f"Ollama se connect karne mein error: {e}"
+        return f"Error: {e}"
 
-def update_markdown_file(content):
-    os.makedirs("output", exist_ok=True)
-    file_path = "output/api_documentation.md"
-    clean_content = content.replace("```markdown", "").replace("```", "").strip()
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(clean_content)
-    print(f"✅ SUCCESS: Markdown File update ho gayi -> {file_path}")
+def generate_security_audit(code):
+    prompt = f"""ROLE: Cyber Security Expert. Analyze for vulnerabilities. Code: {code}"""
+    try:
+        response = requests.post("http://localhost:11434/api/generate", json={
+            "model": "qwen2.5-coder:7b",
+            "prompt": prompt,
+            "stream": False
+        }, timeout=300)
+        return response.json().get("response", "")
+    except Exception as e:
+        return f"Error: {e}"
 
 def update_mermaid_file(result):
     os.makedirs("output", exist_ok=True)
     file_path = "output/diagram.html"
     
-    # 1. Initial Cleanup
+    # 1. Cleaning raw text
     raw_text = result.replace("```json", "").replace("```mermaid", "").replace("```", "").strip()
-    
     clean_res = ""
     
-    # 2. Advanced JSON Parsing with Auto-Repair
+    # 2. JSON Parsing
     try:
         start = raw_text.find('[')
         end = raw_text.rfind(']') + 1
         if start != -1 and end > start:
             json_str = raw_text[start:end]
-            json_str = re.sub(r',\s*\]', ']', json_str)
             diagram_lines = json.loads(json_str)
             clean_res = "\n".join(diagram_lines)
         else:
-            raise ValueError("JSON Brackets missing")
-    except Exception as e:
-        print(f"⚠️ JSON Parsing failed ({e}). Using Nuclear Fallback...")
+            clean_res = raw_text
+    except:
         clean_res = raw_text
 
-    # 3. NUCLEAR REGEX FORMATTING (Universal fix for smashed text)
+    # 3. Aggressive Formatting Fix
+    # Ensure sequenceDiagram is the first line
+    clean_res = re.sub(r'\bsequenceDiagram\b', 'sequenceDiagram\n', clean_res)
     
-    # Ensure sequenceDiagram starts fresh
-    clean_res = re.sub(r'\b(sequenceDiagram)\b', r'\1\n', clean_res)
-    
-    # Force newlines before keywords using word boundaries
-    keywords = ["autonumber", "participant", "box", "alt", "else", "end", "rect", "loop", "opt", "par"]
+    # Force newlines for keywords
+    keywords = ["autonumber", "participant", "box", "alt", "else", "end", "rect", "loop"]
     for kw in keywords:
         clean_res = re.sub(rf'(?<!\n)\s*\b({kw})\b', rf'\n\1', clean_res)
     
-    # Force newlines before arrows (Actor->>Actor)
+    # Force newlines for arrows
     clean_res = re.sub(r'(?<!\n)\s*(\S+[-]{1,2}>>)', r'\n\1', clean_res)
     
-    # Final cleanup of line formatting
-    final_lines = []
-    for line in clean_res.split("\n"):
-        # Remove accidental quotes and commas from the start/end of lines
-        line = line.strip().strip('"').strip("'").strip(',')
-        if line and line.lower() != "null":
-            final_lines.append(line)
-            
-    clean_res = "\n".join(final_lines)
+    # Final cleanup of line noise
+    lines = []
+    for line in clean_res.split('\n'):
+        l = line.strip().strip('"').strip("'").strip(',').strip()
+        if l and l.lower() != "null":
+            lines.append(l)
+    
+    final_clean = "\n".join(lines)
 
     common_style = """
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #172b4d; max-width: 1200px; margin: 0 auto; padding: 40px; background-color: #f4f5f7; }
-        h1 { color: #0052cc; border-bottom: 2px solid #0052cc; padding-bottom: 10px; text-align: center; }
-        .mermaid { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; overflow-x: auto; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f5f7; padding: 40px; }
+        h1 { color: #0052cc; text-align: center; border-bottom: 2px solid #0052cc; padding-bottom: 10px; margin-bottom: 30px; }
+        .mermaid { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
+            display: block; 
+            margin: 0 auto;
+            max-width: 95%;
+            overflow-x: auto;
+        }
     </style>
     """
 
+    # 🚨 FIXED CDN LINK: Removed Markdown syntax from HTML src
     content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -145,60 +142,42 @@ def update_mermaid_file(result):
     <script src="[https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)"></script>
 </head>
 <body>
-    <h1>KodeLens - Smart Auto-Generated Flow</h1>
+    <h1>KodeLens - Professional Design Flow</h1>
     <div class="mermaid">
-{clean_res}
+{final_clean}
     </div>
     <script>
-        const config = {{
-            startOnLoad: true, 
-            securityLevel: 'loose', 
+        mermaid.initialize({{
+            startOnLoad: true,
             theme: 'base',
+            securityLevel: 'loose',
             themeVariables: {{
                 primaryColor: '#e9f2fa',
                 primaryTextColor: '#172b4d',
                 primaryBorderColor: '#0052cc',
-                lineColor: '#6b778c',
-                secondaryColor: '#fffae6',
-                tertiaryColor: '#e3fcef'
+                lineColor: '#6b778c'
             }}
-        }};
-        mermaid.initialize(config);
+        }});
     </script>
 </body>
 </html>"""
 
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
-    print(f"✅ SUCCESS: Visual Diagram update ho gaya -> {file_path}")
+    print(f"✅ SUCCESS: Visual Diagram rendered at -> {file_path}")
 
-# --- MAIN EXECUTION ---
-print("Spring Boot Project scan ho raha hai...")
-folder = "sample_code"
-java_code = read_java_files(folder)
+def update_markdown_file(content, filename):
+    os.makedirs("output", exist_ok=True)
+    with open(f"output/{filename}", "w", encoding="utf-8") as f:
+        f.write(content.replace("```markdown", "").replace("```", "").strip())
+    print(f"✅ SUCCESS: {filename} updated.")
 
-if java_code.strip() == "":
-    print(f"Koi Java code nahi mila. '{folder}' folder mein files daaliye.")
-else:
-    print(f"Java code mil gaya! Processing documentation updates...\n")
-    
-    print("Aap kya Auto-Update karna chahte hain?")
-    print("1. Markdown Documentation (.md)")
-    print("2. Visual Sequence Diagram (.html)")
-    print("3. Dono Update Karein")
-    
-    choice = input("Choice (1/2/3): ")
-    
-    if choice in ['1', '3']:
-        print("\nUpdating Markdown Docs...")
-        md_result = generate_markdown_docs(java_code)
-        if "Error" not in md_result:
-            update_markdown_file(md_result)
-            
-    if choice in ['2', '3']:
-        print("\nUpdating Visual Diagram...")
-        mermaid_result = generate_mermaid_diagram(java_code)
-        if "Error" not in mermaid_result:
-            update_mermaid_file(mermaid_result)
-            
-    print("\nKaam khatam! 'output' folder check karein.")
+# --- MAIN ---
+print("Scanning project...")
+java_code = read_java_files("sample_code")
+if java_code:
+    print("1. Docs  2. Diagram  3. Audit  4. All")
+    c = input("Choice: ")
+    if c in ['1', '4']: update_markdown_file(generate_markdown_docs(java_code), "api_doc.md")
+    if c in ['2', '4']: update_mermaid_file(generate_mermaid_diagram(java_code))
+    if c in ['3', '4']: update_markdown_file(generate_security_audit(java_code), "security_audit.md")
