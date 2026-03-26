@@ -1,0 +1,21 @@
+sequenceDiagram
+participant Client
+participant SearchController
+participant SearchService
+participant DoDOverrideRule
+participant GACRule
+participant QOHRule
+participant GetAllowedServiceBranchRule
+Client->>SearchController: POST /dispensingPharmacies/search
+SearchController->>SearchService: findOptimalPharmacy(request)
+Activate SearchService
+SearchService->>DoDOverrideRule: applyRule(req)
+DoDOverrideRule-->>SearchService: "Department of Defense Override Applied for Retail
+SearchService->>GACRule: applyRule(req)
+GACRule-->>SearchService: "Geographic Access Criteria Passed
+SearchService->>QOHRule: applyRule(req)
+QOHRule-->>SearchService: "Quantity On Hand Checked
+SearchService->>GetAllowedServiceBranchRule: applyRule(req)
+GetAllowedServiceBranchRule-->>SearchService: "Military Service Branch Validated
+SearchService-->>Client: "Optimal Pharmacy Found
+Deactivate SearchService

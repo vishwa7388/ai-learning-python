@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f5f7; padding: 40px; }
+        h1 { color: #0052cc; text-align: center; border-bottom: 2px solid #0052cc; padding-bottom: 10px; }
+        .mermaid {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            max-width: 95%;
+            margin: 20px auto;
+            overflow-x: auto;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <h1>KodeLens - Service Flow Diagram</h1>
+    <div class="mermaid">
+sequenceDiagram
+participant Client
+participant SearchController
+participant SearchService
+participant DoDOverrideRule
+participant GACRule
+participant QOHRule
+participant GetAllowedServiceBranchRule
+Client->>SearchController: POST /dispensingPharmacies/search
+SearchController->>SearchService: findOptimalPharmacy(request)
+Activate SearchService
+SearchService->>DoDOverrideRule: applyRule(req)
+DoDOverrideRule-->>SearchService: "Department of Defense Override Applied for Retail
+SearchService->>GACRule: applyRule(req)
+GACRule-->>SearchService: "Geographic Access Criteria Passed
+SearchService->>QOHRule: applyRule(req)
+QOHRule-->>SearchService: "Quantity On Hand Checked
+SearchService->>GetAllowedServiceBranchRule: applyRule(req)
+GetAllowedServiceBranchRule-->>SearchService: "Military Service Branch Validated
+SearchService-->>Client: "Optimal Pharmacy Found
+Deactivate SearchService
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({startOnLoad: true, theme: 'default'});
+            mermaid.run();
+        });
+    </script>
+</body>
+</html>

@@ -1,30 +1,62 @@
-<!DOCTYPE html><html><head>
+<!DOCTYPE html>
+<html>
+<head>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f5f7; padding: 40px; }
-        .mermaid { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: block; white-space: pre; }
-        h1 { color: #0052cc; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f5f7; padding: 40px; }
+        h1 { color: #0052cc; text-align: center; border-bottom: 2px solid #0052cc; padding-bottom: 10px; margin-bottom: 30px; }
+        .mermaid { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
+            display: block; 
+            margin: 0 auto;
+            max-width: 95%;
+            overflow-x: auto;
+            white-space: pre;
+        }
     </style>
-    <script src="[https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)"></script></head>
-    <body><h1>KodeLens - Professional Flow</h1><div class="mermaid">sequenceDiagram
+    
+    <script src="[https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)"></script>
+</head>
+<body>
+    <h1>KodeLens - Professional Design Flow</h1>
+    <div class="mermaid">
+sequenceDiagram
 autonumber
-box rgba(255, 204, 229, 0.5) "External
-participant User
+box rgba(230, 245, 255, 0.5) API Layer
 participant SearchController
 end
-box rgba(230, 245, 255, 0.5) "API Layer
-SearchController->>SearchService: findOptimalPharmacy(SearchRequest req)
+box rgba(200, 255, 200, 0.5) Business Logic
+participant SearchService
+participant DoDOverrideRule
+participant GACRule
+participant QOHRule
+participant GetAllowedServiceBranchRule
 end
-box rgba(200, 255, 200, 0.5) "Business Logic
-SearchService->>DoDOverrideRule: applyRule(SearchRequest req)
-alt Benefit Type is RETAIL
-DoDOverrideRule-->>SearchService: return "Department of Defense Override Applied for Retail
-else Benefit Type is MAIL
-DoDOverrideRule-->>SearchService: return "Rule Skipped - Mail Benefit Not Eligible for DoD
+SearchController->>SearchService: process
+alt Retail Benefit Type
+DoDOverrideRule-->>SearchService: applyRule
+else Mail Benefit Type
+GACRule-->>SearchService: applyRule
 end
-SearchService->>GACRule: applyRule(SearchRequest req)
-SearchService->>QOHRule: applyRule(SearchRequest req)
-SearchService->>GetAllowedServiceBranchRule: applyRule(SearchRequest req)
-end
-SearchService-->>User: return optimalPharmacy</div>
-    <script>mermaid.initialize({startOnLoad:true, theme:'base', themeVariables:{primaryColor:'#e9f2fa', lineColor:'#6b778c'}});</script>
-    </body></html>
+SearchService->>QOHRule: applyRule
+SearchService->>GetAllowedServiceBranchRule: applyRule
+SearchService-->>SearchController: findOptimalPharmacy
+    </div>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            securityLevel: 'loose',
+            themeVariables: {
+                primaryColor: '#e9f2fa',
+                primaryTextColor: '#172b4d',
+                primaryBorderColor: '#0052cc',
+                lineColor: '#6b778c'
+            }
+        });
+    </script>
+</body>
+</html>
