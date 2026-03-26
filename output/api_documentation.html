@@ -1,45 +1,104 @@
+<!DOCTYPE html>
 <html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f5f7; padding: 40px; max-width: 900px; margin: 0 auto; }
+        h1 { color: #0052cc; border-bottom: 2px solid #0052cc; padding-bottom: 10px; }
+        h2 { color: #172b4d; margin-top: 30px; }
+        li { line-height: 1.8; }
+        p { line-height: 1.6; }
+        strong { color: #0052cc; }
+    </style>
+</head>
 <body>
-<pre>
-```markdown
-# Dispensing Pharmacies API Documentation
-
-## Overview
-This API routes pharmacy orders based on drug information and member details.
-
-## Entry Point
-- **Controller**: `SearchController`
-- **Endpoint**: `/dispensingPharmacies/search`
-- **HTTP Method**: `POST`
-
-## Request
-- **Request Body**: `SearchRequest`
-  - `ndc` (String): National Drug Code
-  - `patientId` (String): Member's unique identifier
-
-## Processing Flow
-1. Receive `SearchRequest`
-2. Call `DrugAdaptor.getDrugInfo(ndc)` to retrieve drug information
-3. Call `MembershipAdaptor.getMemberInfo(patientId)` to retrieve member details
-4. Call `RxRoutingAdaptor.getRouting(drug, member)` to get a list of pharmacies
-5. Apply business rules (GAC Rule, QOH Rule, DoD Override)
-6. Return `SearchResponse` with optimal pharmacy and list of alternatives
-
-## External API Calls
-| API Name | Purpose | Called From |
-|----------|---------|-------------|
-| Drug API | Retrieves drug information | `DrugAdaptor.getDrugInfo(ndc)` |
-
-## Business Rules
-1. **GAC Rule**: Ensures the pharmacy is authorized to dispense the drug to the member.
-2. **QOH Rule**: Validates that the pharmacy has the required quantity on hand.
-3. **DoD Override**: Allows the pharmacy to override the default rules under certain conditions.
-
-## Response
-- **Response Body**: `SearchResponse`
-  - `optimalPharmacy` (Pharmacy): The optimal pharmacy to dispense the drug
-  - `alternativePharmacies` (List<Pharmacy>): A list of alternative pharmacies
-```
-</pre>
+    <h1>KodeLens - API Documentation</h1>
+    <p>html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dispensing Pharmacies API Documentation</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+h1 {
+    color: #333;
+}
+section {
+    margin-bottom: 40px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+th {
+    background-color: #f2f2f2;
+}
+ol {
+    list-style-type: decimal;
+    margin-left: 30px;
+}
+</style>
+</head>
+<body>
+<h1>Dispensing Pharmacies API Documentation</h1></p><p><section>
+<h2>Overview</h2>
+<p>This document outlines the API endpoints and business logic of the Dispensing Pharmacies microservice.</p>
+<p>The service routes pharmacy requests based on various rules such as benefit type, geographic access criteria, quantity on hand, and military service branch validation.</p>
+</section></p><p><section>
+<h2>Entry Point (Controller)</h2>
+<p><strong>Endpoint:</strong> /dispensingPharmacies/search</p>
+<p><strong>HTTP Method:</strong> POST</p>
+</section></p><p><section>
+<h2>Request (Fields)</h2>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>benefitType</td><td>String</td><td>The type of benefit, either "RETAIL" or "MAIL".</td></tr>
+</table>
+</section></p><p><section>
+<h2>Processing Flow (Step by Step)</h2>
+<ol>
+<li>Receive a POST request to /dispensingPharmacies/search with the SearchRequest payload.</li>
+<li>The <code>SearchController</code> forwards the request to the <code>SearchService</code>.</li>
+<li>The <code>SearchService</code> applies the following business rules in sequence:</li>
+<ol type="a">
+<li><strong>DoDOverrideRule:</strong> Applies if benefitType is "RETAIL". Returns a message or skips the rule.</li>
+<li><strong>GACRule:</strong> Checks geographic access criteria. Always passes.</li>
+<li><strong>QOHRule:</strong> Validates quantity on hand. Passes based on inventory levels.</li>
+<li><strong>GetAllowedServiceBranchRule:</strong> Validates military service branch. Passes if valid.</li>
+</ol>
+<li>The <code>SearchService</code> selects the optimal pharmacy based on the rules and returns the result to the controller.</li>
+<li>The controller responds with the optimal pharmacy name as a string.</li>
+</ol>
+</section></p><p><section>
+<h2>External API Calls (Table)</h2>
+<table>
+<tr><th>API Name</th><th>Purpose</th><th>Called From</th></tr>
+<tr><td>No External APIs Mentioned</td><td>N/A</td><td>N/A</td></tr>
+</table>
+</section></p><p><section>
+<h2>Business Rules (List)</h2>
+<ul>
+<li>Department of Defense Override applied if benefitType is "RETAIL".</li>
+<li>Geographic Access Criteria always passed.</li>
+<li>Quantity On Hand checked based on inventory levels.</li>
+<li>Military Service Branch validated for eligibility.</li>
+</ul>
+</section></p><p><section>
+<h2>Response (Fields)</h2>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>optimalPharmacyName</td><td>String</td><td>The name of the selected optimal pharmacy.</td></tr>
+</table>
+</section>
+</body>
+</html></p>
 </body>
 </html>

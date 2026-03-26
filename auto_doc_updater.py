@@ -44,7 +44,7 @@ CRITICAL RULES:
 1. Output ONLY a valid JSON array of strings.
 2. Participant definitions MUST be separate from interaction arrows.
 3. Use 'box' syntax for layers. 
-4. Participants inside the box should NOT have quotes in the name unless needed for display.
+4. Participants inside the box should NOT have quotes in the name.
 5. Flow interactions (arrows) must follow the participant definitions.
 
 EXAMPLE:
@@ -96,7 +96,7 @@ def update_mermaid_file(result):
     except:
         clean_res = raw_text
 
-    # 3. Aggressive Formatting Fix
+    # 3. Aggressive Formatting Fix (The "Anti-Jhantupana" logic)
     # Ensure sequenceDiagram is the first line
     clean_res = re.sub(r'\bsequenceDiagram\b', 'sequenceDiagram\n', clean_res)
     
@@ -105,7 +105,7 @@ def update_mermaid_file(result):
     for kw in keywords:
         clean_res = re.sub(rf'(?<!\n)\s*\b({kw})\b', rf'\n\1', clean_res)
     
-    # Force newlines for arrows
+    # Force newlines for arrows (very important!)
     clean_res = re.sub(r'(?<!\n)\s*(\S+[-]{1,2}>>)', r'\n\1', clean_res)
     
     # Final cleanup of line noise
@@ -113,7 +113,13 @@ def update_mermaid_file(result):
     for line in clean_res.split('\n'):
         l = line.strip().strip('"').strip("'").strip(',').strip()
         if l and l.lower() != "null":
-            lines.append(l)
+            # If line contains both participant and arrow, split them
+            if "participant" in l and "->" in l:
+                sub_parts = re.split(r'(?=->|-->>)', l)
+                for sp in sub_parts:
+                    if sp.strip(): lines.append(sp.strip())
+            else:
+                lines.append(l)
     
     final_clean = "\n".join(lines)
 
@@ -130,11 +136,12 @@ def update_mermaid_file(result):
             margin: 0 auto;
             max-width: 95%;
             overflow-x: auto;
+            white-space: pre;
         }
     </style>
     """
 
-    # 🚨 FIXED CDN LINK: Removed Markdown syntax from HTML src
+    # 🚨 FIXED CDN LINK: Pure HTML, no markdown brackets
     content = f"""<!DOCTYPE html>
 <html>
 <head>
