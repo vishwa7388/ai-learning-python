@@ -1,20 +1,29 @@
-# DP API Documentation
+## 1. Overview
+The Dispensing Pharmacies API is a microservice designed to route pharmacy requests based on business rules such as benefit type, geographic access criteria, and military service branch validation.
 
-## Core Components
-- **Controllers**: `SearchController`
-- **Services**: `SearchService`
-- **Rules**: `GACRule`, `QOHRule`, `DoDOverrideRule`
+## 2. Entry Point
+- **Controller:** `SearchController`
+- **Endpoint:** `/dispensingPharmacies/search`
+- **HTTP Method:** POST
 
-## Business Rules Applied
-1. **Geographic Access Criteria (GAC)**: Ensures that the pharmacy is within an acceptable geographic distance.
-2. **Quantity On Hand (QOH)**: Checks if the requested medication is in stock at the pharmacy.
-3. **Department of Defense Override**: Allows access if the request is coming from a military department.
+## 3. Request
+### Fields:
+- `benefitType` (String): Must be either "RETAIL" or "MAIL"
 
-## Flow Summary
-1. A `POST` request is made to `/dispensingPharmacies/search` with a `SearchRequest` body.
-2. The `SearchController` receives the request and delegates it to the `SearchService`.
-3. The `SearchService` applies the following rules in sequence:
-   - `GACRule`: Validates if the pharmacy meets the geographic criteria.
-   - `QOHRule`: Checks if the requested medication is in stock.
-   - `DoDOverrideRule`: Overrides the rules if the request is from a military department.
-4. If all rules pass, the service returns the optimal pharmacy (`Pharmacy_CVS_12345` in this mock response).
+## 4. Processing Flow
+1. The `SearchController` receives the request.
+2. The `SearchService` processes the request by applying various business rules sequentially.
+
+## 5. External API Calls
+| API Name | Purpose | Called From |
+|----------|---------|-------------|
+| N/A      | N/A     | N/A         |
+
+## 6. Business Rules
+1. **DoDOverrideRule**: Checks if the `benefitType` is "RETAIL". If true, applies a Department of Defense override; otherwise, skips this rule.
+2. **GACRule**: Validates that geographic access criteria are met.
+3. **QOHRule**: Ensures that the quantity on hand (QOH) is sufficient.
+4. **GetAllowedServiceBranchRule**: Verifies if the military service branch in the request is valid.
+
+## 7. Response
+- The response will be a string indicating either the optimal pharmacy or a message regarding skipped rules based on business logic application.
