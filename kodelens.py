@@ -2,7 +2,21 @@ import requests
 import os
 import json
 import re
+import argparse
 
+def get_args():
+    parser = argparse.ArgumentParser(description="KodeLens - AI Code Documentation Tool")
+    parser.add_argument("--folder", default="sample_code", help="Project folder path")
+    parser.add_argument("--docs", action="store_true", help="Generate Markdown docs")
+    parser.add_argument("--html", action="store_true", help="Generate HTML docs")
+    parser.add_argument("--diagram", action="store_true", help="Generate Mermaid diagram")
+    parser.add_argument("--flow", action="store_true", help="Generate connected flow")
+    parser.add_argument("--audit", action="store_true", help="Security audit")
+    parser.add_argument("--smart", action="store_true", help="Smart analysis per file")
+    parser.add_argument("--hld", action="store_true", help="Generate high-level design (Markdown)")
+    parser.add_argument("--lld", action="store_true", help="Generate low-level design (Markdown)")
+    parser.add_argument("--all", action="store_true", help="Generate everything")
+    return parser.parse_args()
 # ============================================
 # KodeLens - AI Code Documentation Tool
 # Version: 1.0
@@ -10,7 +24,7 @@ import re
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "qwen2.5-coder:7b"
-TIMEOUT = 300
+TIMEOUT = 600
 
 # --- FILE READING ---
 def read_java_file(file_path):
@@ -230,6 +244,80 @@ CODE:
 
     return call_ai(prompt)
 
+def generate_hld(all_code):
+    prompt = f"""ROLE: You are a Senior Spring Boot architect who writes high-level design documents.
+
+CONTEXT: These files are part of Dispensing Pharmacies API - a pharmacy routing microservice.
+
+TASK: Produce a concise high-level design from the codebase.
+
+FORMAT (Markdown only). Use exactly these ## section headings in order:
+
+## System Overview
+(2 lines max: what the system does and its main boundary)
+
+## Architecture Layers
+Describe how code maps to: Controller, Service, Adaptor (or Adapter), Model layers. Use bullets or short paragraphs.
+
+## Component Responsibilities
+| Component | Layer | Responsibility |
+|-----------|-------|----------------|
+(One row per significant class or package; infer from code)
+
+## External Systems and APIs
+| System/API | Purpose | Called From |
+|------------|---------|-------------|
+(HTTP clients, RSS, DB, message queues, third-party URLs, etc.—only what appears in code)
+
+## Tech Stack
+(Bullet list: language, framework, key libraries, build tool—only what is evidenced by the code)
+
+## Data Flow Summary
+(Short numbered or bulleted summary: request in → layers → external calls → response out)
+
+Do NOT explain annotations or Spring Boot basics.
+Do NOT repeat any point. Keep tables aligned and readable.
+
+CODE:
+{all_code}"""
+
+    return call_ai(prompt)
+
+def generate_lld(all_code):
+    prompt = f"""ROLE: You are a Senior Spring Boot architect who writes low-level design documents.
+
+CONTEXT: These files are part of Dispensing Pharmacies API - a pharmacy routing microservice.
+
+TASK: Produce a low-level design from the codebase: class-by-class detail grounded in the actual code.
+
+FORMAT (Markdown only). For each public or significant class, use this structure (repeat per class):
+
+## <ClassName>
+### Key fields / attributes
+(Bullet list: field name, type, brief role—only members that matter for behavior or API contracts)
+
+### Methods
+| Method | Parameters | Return type | Purpose |
+|--------|------------|-------------|---------|
+(One row per non-trivial method; include constructors if they encode important wiring)
+
+### Dependencies
+(Bullets: which other classes this class calls or injects—caller → callee)
+
+Also include one top section before the per-class blocks:
+
+## Class dependency overview
+(Short table or bullet list summarizing which class calls which across the project)
+
+Skip boilerplate getters/setters unless they encode business meaning.
+Do NOT explain annotations or Spring Boot basics.
+Do NOT repeat the same method or field twice. Keep tables aligned and readable.
+
+CODE:
+{all_code}"""
+
+    return call_ai(prompt)
+
 # 2. Full Documentation (HTML)
 def generate_docs_html(all_code):
     prompt = f"""ROLE: You are a Senior Spring Boot architect who writes Confluence documentation.
@@ -360,6 +448,26 @@ def generate_smart_analysis(files, structure):
 def save_markdown(content, filename):
     os.makedirs("output", exist_ok=True)
     filepath = f"output/{filename}"
+    clean = content.replace("```markdown", "").replace("```", "").strip()
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(clean)
+
+    print(f"  Saved: {filepath}")
+
+def save_hld(content):
+    os.makedirs("output", exist_ok=True)
+    filepath = "output/hld_document.md"
+    clean = content.replace("```markdown", "").replace("```", "").strip()
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(clean)
+
+    print(f"  Saved: {filepath}")
+
+def save_lld(content):
+    os.makedirs("output", exist_ok=True)
+    filepath = "output/lld_document.md"
     clean = content.replace("```markdown", "").replace("```", "").strip()
 
     with open(filepath, "w", encoding="utf-8") as f:
@@ -514,7 +622,6 @@ def save_smart_report(results):
                 f.write(analysis.replace("```", "").strip())
                 f.write("\n\n---\n\n")
 
-    print(f"  Saved: {filepath}")
 
 # --- MAIN ---
 def main():
@@ -523,9 +630,8 @@ def main():
     print("  Version 1.0")
     print("=" * 50)
 
-    folder = input("\nProject folder path (default: sample_code): ").strip()
-    if not folder:
-        folder = "sample_code"
+    args = get_args()
+    folder = args.folder
 
     files = scan_folder(folder)
     if not files:
@@ -543,54 +649,58 @@ def main():
         if code:
             all_code += f"\n// --- FILE: {filename} ---\n{code}\n"
 
-    print("\nWhat do you want to generate?")
-    print("  1. API Documentation (Markdown)")
-    print("  2. API Documentation (HTML)")
-    print("  3. Flow Diagram (Mermaid)")
-    print("  4. Connected Flow (Step-by-step)")
-    print("  5. Security Audit")
-    print("  6. Smart Analysis (per file type)")
-    print("  7. ALL of the above")
-
-    choice = input("\nChoice (1-7): ").strip()
+    if not any([args.docs, args.html, args.diagram, args.flow, args.audit, args.smart, args.hld, args.lld, args.all]):
+        args.all = True
 
     print("\nGenerating...\n")
 
-    if choice in ["1", "7"]:
-        print("[1/7] API Documentation (Markdown)...")
+    if args.docs or args.all:
+        print("[1] API Documentation (Markdown)...")
         result = generate_docs(all_code)
         if result:
             save_markdown(result, "api_documentation.md")
 
-    if choice in ["2", "7"]:
-        print("[2/7] API Documentation (HTML)...")
+    if args.html or args.all:
+        print("[2] API Documentation (HTML)...")
         result = generate_docs_html(all_code)
         if result:
             save_html_doc(result, "api_documentation.html")
 
-    if choice in ["3", "7"]:
-        print("[3/7] Flow Diagram (Mermaid)...")
+    if args.diagram or args.all:
+        print("[3] Flow Diagram (Mermaid)...")
         result = generate_mermaid(all_code)
         if result:
             save_mermaid_html(result)
 
-    if choice in ["4", "7"]:
-        print("[4/7] Connected Flow...")
+    if args.flow or args.all:
+        print("[4] Connected Flow...")
         result = generate_flow(all_code)
         if result:
             save_markdown(result, "connected_flow.md")
 
-    if choice in ["5", "7"]:
-        print("[5/7] Security Audit...")
+    if args.audit or args.all:
+        print("[5] Security Audit...")
         result = generate_security_audit(all_code)
         if result:
             save_markdown(result, "security_audit.md")
 
-    if choice in ["6", "7"]:
-        print("[6/7] Smart Analysis (per file type)...")
+    if args.smart or args.all:
+        print("[6] Smart Analysis...")
         results = generate_smart_analysis(files, structure)
         if results:
             save_smart_report(results)
+
+    if args.hld or args.all:
+        print("[7] High Level Design (HLD)...")
+        result = generate_hld(all_code)
+        if result:
+            save_hld(result)
+
+    if args.lld or args.all:
+        print("[8] Low Level Design (LLD)...")
+        result = generate_lld(all_code)
+        if result:
+            save_lld(result)
 
     print("\n" + "=" * 50)
     print("  DONE! Check output/ folder")

@@ -1,0 +1,7 @@
+com\example\newsindia\NewsIndiaApplication.class
+com\example\newsindia\model\NewsItem.class
+com\example\newsindia\service\NewsService.class
+com\example\newsindia\service\RssNewsClient.class
+com\example\newsindia\model\NewsResponse.class
+com\example\newsindia\controller\NewsController.class
+com\example\newsindia\service\NewsService$CachedNews.class
