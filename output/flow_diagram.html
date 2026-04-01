@@ -12,6 +12,7 @@
             max-width: 95%;
             margin: 20px auto;
             overflow-x: auto;
+            white-space: pre;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -19,32 +20,38 @@
 <body>
     <h1>KodeLens - Service Flow Diagram</h1>
     <div class="mermaid">
+[
 sequenceDiagram
-participant Client
+autonumber"
+box rgba(230, 245, 255, 0.5) API"
+participant BenefitController"
+participant MemberController"
+participant PharmacyController"
 participant SearchController
-participant SearchService
-participant DoDOverrideRule
-participant GACRule
-participant QOHRule
-participant GetAllowedServiceBranchRule
-Client->>SearchController: POST /dispensingPharmacies/search
-SearchController->>SearchService: findOptimalPharmacy(request)
-Activate SearchService
-SearchService->>DoDOverrideRule: applyRule(req)
-DoDOverrideRule-->>SearchService: "Department of Defense Override Applied for Retail
-SearchService->>GACRule: applyRule(req)
-GACRule-->>SearchService: "Geographic Access Criteria Passed
-SearchService->>QOHRule: applyRule(req)
-QOHRule-->>SearchService: "Quantity On Hand Checked
-SearchService->>GetAllowedServiceBranchRule: applyRule(req)
-GetAllowedServiceBranchRule-->>SearchService: "Military Service Branch Validated
-SearchService-->>Client: "Optimal Pharmacy Found
-Deactivate SearchService
+end"
+BenefitAdaptor->>BenefitController: fetchBenefits(String memberId)"
+MemberAdaptor->>MemberController: fetchEligibility(String memberId)"
+PharmacyAdaptor->>PharmacyController: fetchPharmacy(String npi)"
+InventoryAdaptor->>SearchService: fetchStock(String npi, Integer quantity)"
+NotificationAdaptor->>SearchService: sendNotification(Map<String, Object> payload)"
+BenefitController-->>BenefitAdaptor: return Map<String, Object>"
+MemberController-->>MemberAdaptor: return MemberResponse"
+PharmacyController-->>PharmacyAdaptor: return PharmacyResponse"
+SearchService-->>InventoryAdaptor: return Map<String, Object>"
+SearchService-->>NotificationAdaptor: return Map<String, Object>
+]
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            mermaid.initialize({startOnLoad: true, theme: 'default'});
-            mermaid.run();
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            securityLevel: 'loose',
+            themeVariables: {
+                primaryColor: '#e9f2fa',
+                primaryTextColor: '#172b4d',
+                primaryBorderColor: '#0052cc',
+                lineColor: '#6b778c'
+            }
         });
     </script>
 </body>
