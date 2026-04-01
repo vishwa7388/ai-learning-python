@@ -1,39 +1,37 @@
 ## System Overview
-The Dispensing Pharmacies API is a pharmacy routing microservice that determines the optimal pharmacy based on search criteria, applying various rules and checks to ensure eligibility.
+This Spring Boot microservice system provides a search functionality for dispensed medications, integrating with multiple external APIs to retrieve benefits, inventory, member eligibility, and pharmacy details.
 
 ## Architecture Layers
 - **Controller**: Handles incoming HTTP requests.
-- **Service**: Orchestrates the business logic by calling rules.
-- **Adaptor (or Adapter)**: Not explicitly present in the code.
-- **Model**: Contains the data structure for search requests.
+- **Service**: Orchestrates business logic by calling multiple adaptors.
+- **Adaptor**: Communicates with external systems to fetch data.
+- **Model**: Represents data structures used within the service.
 
 ## Component Responsibilities
-| Component          | Layer   | Responsibility                                                                 |
-|--------------------|---------|--------------------------------------------------------------------------------|
-| SearchController   | Controller | Handles incoming search requests and invokes the service to find the optimal pharmacy. |
-| SearchService      | Service  | Orchestrates rule application and determines the optimal pharmacy.                |
-| DoDOverrideRule    | Service  | Applies Department of Defense override rules based on benefit type.               |
-| GACRule            | Service  | Validates Geographic Access Criteria for the request.                           |
-| QOHRule            | Service  | Checks Quantity On Hand for inventory availability.                             |
-| GetAllowedServiceBranchRule | Service | Ensures that the military service branch is valid for the request.              |
-| SearchRequest      | Model    | Represents the search criteria including benefit type.                         |
+| Component | Layer | Responsibility |
+|-----------|-------|----------------|
+| `DispensingPharmaciesDemoApplication` | N/A | Bootstraps the application. |
+| `BenefitAdaptor`, `InventoryAdaptor`, `MemberAdaptor`, `NotificationAdaptor`, `PharmacyAdaptor` | Adaptor | Fetches data from external APIs. |
+| `RestTemplateConfig` | Configuration | Configures `RestTemplate` for HTTP requests. |
+| `BenefitController`, `MemberController`, `PharmacyController`, `SearchController` | Controller | Processes incoming requests and returns responses. |
+| `PharmacyService` | Service | Orchestrates business logic, coordinating with adaptors. |
+| `SearchService` | Service | Handles the main search functionality, applying rules and integrating multiple adaptors. |
+| `DoDOverrideRule`, `GACRule`, `QOHRule` | Rule | Defines specific rules for search validation. |
+| `MemberResponse`, `PharmacyResponse`, `SearchRequest` | Model | Represents data structures used within the service. |
 
 ## External Systems and APIs
-| System/API        | Purpose                          | Called From                    |
-|-------------------|----------------------------------|--------------------------------|
-| None              | No external systems or APIs are called within the provided code. |
+| System/API | Purpose | Called From |
+|------------|---------|-------------|
+| benefit-api.example.com | Fetches benefits based on member ID. | BenefitAdaptor |
+| inventory-api.example.com | Fetches stock details for a pharmacy NPI. | InventoryAdaptor |
+| member-api.example.com | Checks member eligibility and plan type. | MemberAdaptor |
+| notify-api.example.com | Sends notifications about search events. | NotificationAdaptor |
+| pharmacy-api.example.com | Retrieves pharmacy details based on NPI. | PharmacyAdaptor |
 
 ## Tech Stack
-- **Language**: Java
-- **Framework**: Spring Boot
-- **Key Libraries**: None explicitly listed in the provided code.
-- **Build Tool**: Maven (inferred from the structure of the project)
+- Spring Boot
+- Java 8+
+- Maven/Gradle for build management
+- JUnit for testing
 
-## Data Flow Summary
-1. A `SearchRequest` is received by the `SearchController`.
-2. The `SearchService` is invoked to determine the optimal pharmacy.
-3. Various rules (`DoDOverrideRule`, `GACRule`, etc.) are applied sequentially.
-4. The service processes the rules and returns the optimal pharmacy.
-5. The `SearchController` responds with the result.
-
-This concise high-level design outlines the core components, their responsibilities, and the flow of data through the system.
+This system is designed to be highly modular, making it easy to integrate and extend in the future.
